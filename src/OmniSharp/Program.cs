@@ -2,152 +2,134 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNet.Hosting;
-using Microsoft.AspNet.Hosting.Internal;
-using Microsoft.AspNet.Hosting.Startup;
-using Microsoft.Dnx.Runtime;
-using Microsoft.Framework.Configuration;
-using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
+using OmniSharp.Stdio;
 using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
     public class Program
     {
-        private readonly IServiceProvider _serviceProvider;
-        private readonly IStartupLoader _startupLoader;
-
         public static OmnisharpEnvironment Environment { get; set; }
 
-        public Program(IServiceProvider serviceProvider, IStartupLoader startupLoader)
+        public static void Main(string[] args)
         {
-            _serviceProvider = serviceProvider;
-            _startupLoader = startupLoader;
-        }
-
-        public void Main(string[] args)
-        {
-            var applicationRoot = Directory.GetCurrentDirectory();
-            var serverPort = 2000;
-            var logLevel = LogLevel.Information;
-            var hostPID = -1;
-            var transportType = TransportType.Http;
-            var otherArgs = new List<string>();
-            var plugins = new List<string>();
-
-            var enumerator = args.GetEnumerator();
-
-            while (enumerator.MoveNext())
+            try
             {
-                var arg = (string)enumerator.Current;
-                if (arg == "-s")
+                Console.WriteLine($"Omnisharp: {string.Join(" ", args)}");
+
+                var applicationRoot = Directory.GetCurrentDirectory();
+                var serverPort = 2000;
+                var logLevel = LogLevel.Information;
+                var hostPID = -1;
+                var transportType = TransportType.Http;
+                var otherArgs = new List<string>();
+                var plugins = new List<string>();
+
+                var enumerator = args.GetEnumerator();
+
+                while (enumerator.MoveNext())
                 {
-                    enumerator.MoveNext();
-                    applicationRoot = Path.GetFullPath((string)enumerator.Current);
+                    var arg = (string)enumerator.Current;
+                    if (arg == "-s")
+                    {
+                        enumerator.MoveNext();
+                        applicationRoot = Path.GetFullPath((string)enumerator.Current);
+                    }
+                    else if (arg == "-p")
+                    {
+                        enumerator.MoveNext();
+                        serverPort = int.Parse((string)enumerator.Current);
+                    }
+                    else if (arg == "-v")
+                    {
+                        logLevel = LogLevel.Debug;
+                    }
+                    else if (arg == "--hostPID")
+                    {
+                        enumerator.MoveNext();
+                        hostPID = int.Parse((string)enumerator.Current);
+                    }
+                    else if (arg == "--stdio")
+                    {
+                        transportType = TransportType.Stdio;
+                    }
+                    else if (arg == "--plugin")
+                    {
+                        enumerator.MoveNext();
+                        plugins.Add((string)enumerator.Current);
+                    }
+                    else
+                    {
+                        otherArgs.Add((string)enumerator.Current);
+                    }
                 }
-                else if (arg == "-p")
+
+                Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType, otherArgs.ToArray());
+
+                var config = new ConfigurationBuilder().AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
+
+                var writer = new SharedConsoleWriter();
+
+                var builder = new WebHostBuilder(config.Build())
+                    .UseEnvironment("OmniSharp")
+                    .UseStartup("OmniSharp")
+                    .UseServices(serviceCollection =>
+                    {
+                        serviceCollection.AddSingleton<IOmnisharpEnvironment>(Environment);
+                        serviceCollection.AddSingleton<ISharedTextWriter>(writer);
+                        serviceCollection.AddSingleton(new PluginAssemblies(plugins));
+                    });
+
+                if (transportType == TransportType.Stdio)
                 {
-                    enumerator.MoveNext();
-                    serverPort = int.Parse((string)enumerator.Current);
-                }
-                else if (arg == "-v")
-                {
-                    logLevel = LogLevel.Verbose;
-                }
-                else if (arg == "--hostPID")
-                {
-                    enumerator.MoveNext();
-                    hostPID = int.Parse((string)enumerator.Current);
-                }
-                else if (arg == "--stdio")
-                {
-                    transportType = TransportType.Stdio;
-                }
-                else if (arg == "--plugin")
-                {
-                    enumerator.MoveNext();
-                    plugins.Add((string)enumerator.Current);
+                    builder.UseServerFactory(new StdioServerFactory(Console.In, writer));
                 }
                 else
                 {
-                    otherArgs.Add((string)enumerator.Current);
+                    builder.UseServerFactory("Microsoft.AspNet.Server.Kestrel");
                 }
-            }
 
-            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType, otherArgs.ToArray());
-
-            var config = new ConfigurationBuilder()
-             .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
-
-            var writer = new SharedConsoleWriter();
-            var builder = new WebHostBuilder(_serviceProvider)
-                .UseEnvironment("OmniSharp")
-                .UseStartup("OmniSharp")
-                .UseServices(serviceCollection =>
-            {
-                serviceCollection.AddInstance<IOmnisharpEnvironment>(Environment);
-                serviceCollection.AddInstance<ISharedTextWriter>(writer);
-                serviceCollection.AddInstance<PluginAssemblies>(new PluginAssemblies(plugins));
-            });
-
-            if (transportType == TransportType.Stdio)
-            {
-                builder.UseServer(new Stdio.StdioServerFactory(Console.In, writer));
-            }
-            else
-            {
-                builder.UseServer("Microsoft.AspNet.Server.Kestrel");
-            }
-
-            var serverShutdown = builder.Build().Start();
-
-            var appShutdownService = _serviceProvider.GetRequiredService<IApplicationShutdown>();
-            var shutdownHandle = new ManualResetEvent(false);
-
-            appShutdownService.ShutdownRequested.Register(() =>
-            {
-                serverShutdown.Dispose();
-                shutdownHandle.Set();
-            });
-
-#if DNXCORE50
-            var ignored = Task.Run(() =>
-            {
-                Console.WriteLine("Started");
-                Console.ReadLine();
-                appShutdownService.RequestShutdown();
-            });
-#else
-            Console.CancelKeyPress += (sender, e) =>
-            {
-                appShutdownService.RequestShutdown();
-            };
-#endif
-
-            if (hostPID != -1)
-            {
-                try
+                var host = builder.Build();
+                using (var app = host.Start())
                 {
-                    var hostProcess = Process.GetProcessById(hostPID);
-                    hostProcess.EnableRaisingEvents = true;
-                    hostProcess.OnExit(() => appShutdownService.RequestShutdown());
-                }
-                catch
-                {
-                    // If the process dies before we get here then request shutdown
-                    // immediately
-                    appShutdownService.RequestShutdown();
+                    var appLifeTime = app.Services.GetRequiredService<IApplicationLifetime>();
+
+                    Console.CancelKeyPress += (sender, e) =>
+                    {
+                        appLifeTime.StopApplication();
+                        e.Cancel = true;
+                    };
+
+                    if (hostPID != -1)
+                    {
+                        try
+                        {
+                            var hostProcess = Process.GetProcessById(hostPID);
+                            hostProcess.EnableRaisingEvents = true;
+                            hostProcess.OnExit(() => appLifeTime.StopApplication());
+                        }
+                        catch
+                        {
+                            // If the process dies before we get here then request shutdown
+                            // immediately
+                            appLifeTime.StopApplication();
+                        }
+                    }
+
+                    appLifeTime.ApplicationStopping.WaitHandle.WaitOne();
                 }
             }
-
-            shutdownHandle.WaitOne();
+            catch (Exception ex)
+            {
+                Debugger.Launch();
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }

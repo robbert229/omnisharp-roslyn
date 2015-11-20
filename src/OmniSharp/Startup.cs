@@ -7,18 +7,15 @@ using System.Reflection;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Hosting;
-using Microsoft.CodeAnalysis.Host.Mef;
-using Microsoft.Dnx.Runtime;
-using Microsoft.Framework.Caching.Memory;
-using Microsoft.Framework.Configuration;
-using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.Logging;
-using Microsoft.Framework.OptionsModel;
-using OmniSharp.Dnx;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.OptionsModel;
+using Microsoft.Extensions.PlatformAbstractions;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
 using OmniSharp.Options;
-using OmniSharp.Plugins;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Logging;
@@ -68,27 +65,28 @@ namespace OmniSharp
         }
 
         public static CompositionHost ConfigureMef(IServiceProvider serviceProvider,
-                                                          OmniSharpOptions options,
-                                                          IEnumerable<Assembly> assemblies,
-                                                          Func<ContainerConfiguration, ContainerConfiguration> configure = null)
+                                                   OmniSharpOptions options,
+                                                   IEnumerable<Assembly> assemblies,
+                                                   ILogger logger,
+                                                   Func<ContainerConfiguration, ContainerConfiguration> configurationAction)
         {
-            var config = new ContainerConfiguration();
-            assemblies = assemblies
-                .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
-                .Distinct();
+            logger.LogInformation("Configuring MEF");
+
+            var containerConfiguration = new ContainerConfiguration();
+            assemblies = IncludeAssembliesFromType(assemblies, typeof(OmnisharpWorkspace), typeof(IRequest));
 
             foreach (var assembly in assemblies)
             {
-                config = config.WithAssembly(assembly);
+                containerConfiguration = containerConfiguration.WithAssembly(assembly);
             }
 
             var memoryCache = serviceProvider.GetService<IMemoryCache>();
-            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var env = serviceProvider.GetService<IOmnisharpEnvironment>();
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var writer = serviceProvider.GetService<ISharedTextWriter>();
             var applicationLifetime = serviceProvider.GetService<IApplicationLifetime>();
 
-            config = config
+            containerConfiguration = containerConfiguration
                 .WithProvider(MefValueProvider.From(serviceProvider))
                 .WithProvider(MefValueProvider.From<IFileSystemWatcher>(new ManualFileSystemWatcher()))
                 .WithProvider(MefValueProvider.From(memoryCache))
@@ -101,56 +99,89 @@ namespace OmniSharp
 
             if (env.TransportType == TransportType.Stdio)
             {
-                config = config
-                    .WithProvider(MefValueProvider.From<IEventEmitter>(new StdioEventEmitter(writer)));
+                containerConfiguration = containerConfiguration
+                    .WithProvider(MefValueProvider.From<IEventEmitter>(
+                        new StdioEventEmitter(writer, loggerFactory)));
             }
             else
             {
-                config = config
+                containerConfiguration = containerConfiguration
                     .WithProvider(MefValueProvider.From<IEventEmitter>(new NullEventEmitter()));
             }
 
-            if (configure != null)
-                config = configure(config);
+            if (configurationAction != null)
+            {
+                containerConfiguration = configurationAction(containerConfiguration);
+            }
 
-            var container = config.CreateContainer();
+            var container = containerConfiguration.CreateContainer();
             return container;
         }
 
-        public void Configure(IApplicationBuilder app, IServiceProvider serviceProvider, ILibraryManager manager,
-            IOmnisharpEnvironment env, ILoggerFactory loggerFactory, ISharedTextWriter writer, IOptions<OmniSharpOptions> optionsAccessor)
+        public void Configure(IApplicationBuilder app,
+                              IServiceProvider serviceProvider,
+                              IOmnisharpEnvironment env,
+                              ILoggerFactory loggerFactory,
+                              ISharedTextWriter writer,
+                              IOptions<OmniSharpOptions> optionsAccessor)
         {
-            var assemblies = manager.GetReferencingLibraries("OmniSharp.Abstractions")
-                .SelectMany(libraryInformation => libraryInformation.Assemblies)
-                .Concat(
-                    manager.GetReferencingLibraries("OmniSharp.Roslyn")
-                        .SelectMany(libraryInformation => libraryInformation.Assemblies)
-                )
-                .Select(assemblyName => Assembly.Load(assemblyName));
+            if (app == null)
+            {
+                throw new ArgumentNullException(nameof(app));
+            }
 
-            PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
+            if (serviceProvider == null)
+            {
+                throw new ArgumentNullException(nameof(serviceProvider));
+            }
 
-            Workspace = PluginHost.GetExport<OmnisharpWorkspace>();
+            if (env == null)
+            {
+                throw new ArgumentNullException(nameof(env));
+            }
 
-            Func<string, LogLevel, bool> logFilter = (category, type) =>
-                (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) || string.Equals(category, typeof(ExceptionHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))
-                && env.TraceType <= type;
+            if (loggerFactory == null)
+            {
+                throw new ArgumentNullException(nameof(loggerFactory));
+            }
+
+            if (writer == null)
+            {
+                throw new ArgumentNullException(nameof(writer));
+            }
+
+            if (optionsAccessor == null)
+            {
+                throw new ArgumentNullException(nameof(optionsAccessor));
+            }
 
             if (env.TransportType == TransportType.Stdio)
             {
-                loggerFactory.AddStdio(writer, logFilter);
+                loggerFactory.AddStdio(writer, (category, level) => LogFilter(category, level, env));
             }
             else
             {
-                loggerFactory.AddConsole(logFilter);
+                loggerFactory.AddConsole((category, level) => LogFilter(category, level, env));
             }
 
+            var assemblies = new List<Assembly>
+            {
+                Assembly.Load(new AssemblyName("OmniSharp")),
+                Assembly.Load(new AssemblyName("OmniSharp.Abstractions")),
+                Assembly.Load(new AssemblyName("OmniSharp.DotNet")),
+                Assembly.Load(new AssemblyName("OmniSharp.Plugins")),
+                Assembly.Load(new AssemblyName("OmniSharp.Roslyn")),
+                Assembly.Load(new AssemblyName("OmniSharp.Roslyn.CSharp")),
+                Assembly.Load(new AssemblyName("OmniSharp.Stdio"))
+            };
+
             var logger = loggerFactory.CreateLogger<Startup>();
+            PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies, logger, configurationAction: null);
+
+            Workspace = PluginHost.GetExport<OmnisharpWorkspace>();
 
             app.UseRequestLogging();
-
             app.UseExceptionHandler("/error");
-
             app.UseMiddleware<EndpointMiddleware>();
             app.UseMiddleware<StatusMiddleware>();
             app.UseMiddleware<StopServerMiddleware>();
@@ -166,10 +197,13 @@ namespace OmniSharp
 
             // Forward workspace events
             PluginHost.GetExport<ProjectEventForwarder>();
+
+            logger.LogInformation($"Begining initializing project systems ...");
             foreach (var projectSystem in PluginHost.GetExports<IProjectSystem>())
             {
                 try
                 {
+                    logger.LogInformation($"Initializing project system {projectSystem.Key}.");
                     projectSystem.Initalize(Configuration.GetSection(projectSystem.Key));
                 }
                 catch (Exception e)
@@ -184,6 +218,48 @@ namespace OmniSharp
             Workspace.Initialized = true;
 
             logger.LogInformation("Solution has finished loading");
+        }
+
+        private static IEnumerable<Assembly> IncludeAssembliesFromType(IEnumerable<Assembly> assemblies, params Type[] types)
+        {
+            return assemblies.Concat(types.Select(t => t.GetTypeInfo().Assembly))
+                             .Distinct();
+        }
+
+        private static bool LogFilter(string category, LogLevel level, IOmnisharpEnvironment environment)
+        {
+            if (environment.TraceType > level)
+            {
+                return false;
+            }
+
+            if (string.Equals(category,
+                              typeof(ExceptionHandlerMiddleware).FullName,
+                              StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (!category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (string.Equals(category,
+                              typeof(WorkspaceInformationService).FullName,
+                              StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (string.Equals(category,
+                              typeof(ProjectEventForwarder).FullName,
+                              StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

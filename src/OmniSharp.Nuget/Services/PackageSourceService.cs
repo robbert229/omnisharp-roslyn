@@ -2,25 +2,14 @@ using System.Collections.Generic;
 using System.Composition;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Recommendations;
-using Microsoft.CodeAnalysis.Text;
-#if DNX451
-using NuGet.Logging;
-using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
-using NuGet.Versioning;
-#endif
-using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.NuGet;
 
 namespace OmniSharp
 {
-#if DNX451
     [OmniSharpHandler(OmnisharpEndpoints.PackageSource, "NuGet")]
     public class PackageSourceService : RequestHandler<PackageSourceRequest, PackageSourceResponse>
     {
@@ -49,5 +38,4 @@ namespace OmniSharp
             return Task.FromResult(new PackageSourceResponse());
         }
     }
-#endif
 }

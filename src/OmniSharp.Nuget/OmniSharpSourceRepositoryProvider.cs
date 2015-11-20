@@ -1,17 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.CodeAnalysis;
-#if DNX451
-using NuGet.Protocol.Core.Types;
 using NuGet.Configuration;
-using NuGet.Protocol.Core.v2;
+using NuGet.Protocol.Core.Types;
 using NuGet.Protocol.Core.v3;
-#endif
 
 namespace OmniSharp.NuGet
 {
-#if DNX451
     public class OmniSharpSourceRepositoryProvider : ISourceRepositoryProvider
     {
         private static PackageSource[] DefaultPrimarySources = {
@@ -39,8 +33,9 @@ namespace OmniSharp.NuGet
         {
             var settings = global::NuGet.Configuration.Settings.LoadDefaultSettings(root: root, configFileName: null, machineWideSettings: null);
             _packageSourceProvider = new PackageSourceProvider(settings, DefaultPrimarySources, DefaultSecondarySources, migratePackageSources: null);
-            _resourceProviders = Repository.Provider.GetCoreV3()
-                .Concat(Repository.Provider.GetCoreV2());
+            _resourceProviders = Repository.Provider.GetCoreV3();
+                // TODO: V2 support under coreclr?
+                //.Concat(Repository.Provider.GetCoreV2());
             _repositories = new List<SourceRepository>();
 
             // Refresh the package sources
@@ -81,5 +76,4 @@ namespace OmniSharp.NuGet
             }
         }
     }
-#endif
 }

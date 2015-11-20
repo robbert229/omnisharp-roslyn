@@ -11,9 +11,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.Framework.Configuration;
-using Microsoft.Framework.Logging;
-using Microsoft.Framework.OptionsModel;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
 using OmniSharp.MSBuild.ProjectFile;
@@ -346,7 +345,7 @@ namespace OmniSharp.MSBuild
                         continue;
                     }
 
-                    _logger.LogVerbose($"Adding reference '{referencePath}' to '{projectFileInfo.ProjectFilePath}'.");
+                    _logger.LogDebug($"Adding reference '{referencePath}' to '{projectFileInfo.ProjectFilePath}'.");
                     _workspace.AddMetadataReference(project.Id, metadataReference);
                 }
             }

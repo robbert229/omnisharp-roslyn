@@ -5,32 +5,15 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "OmniSharp.Roslyn": "1.0.0-*"
+    "OmniSharp.Roslyn": "1.0.0-*",
+    "NuGet.Configuration": "3.3.0-*",
+    "NuGet.Packaging.Core": "3.3.0-*",
+    "NuGet.Protocol.Core.v3": "3.3.0-*"
   },
   "frameworks": {
-    "dnx451": {
-      "dependencies": {
-        "NuGet.Configuration": "3.1.0-*",
-        "NuGet.Packaging.Core": "3.1.0-*",
-        "NuGet.Protocol.Core.v2": "3.1.0-*",
-        "NuGet.Protocol.Core.v3": "3.1.0-*"
-      },
-      "frameworkAssemblies": {
-        "System.Runtime": "",
-        "System.Threading":"",
-        "System.Threading.Tasks":"",
-        "System.Collections":"",
-        "System.Globalization":"",
-        "System.Linq": "",
-        "System.Text.Encoding":"",
-        "System.IO":"",
-        "System.Reflection":"",
-        "System.Security":""
-      }
-    },
     "dnxcore50": {
       "dependencies": {
-        "System.Runtime": "4.0.21-beta-23409"
+        "System.Runtime": "4.0.21-beta-23409-*"
       }
     }
   }

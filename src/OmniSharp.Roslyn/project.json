@@ -5,29 +5,14 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "Microsoft.CodeAnalysis": "1.1.0-beta1-20150928-02"
+    "Microsoft.CodeAnalysis": "1.1.0-*",
+    "System.Linq.Parallel": "4.0.1-*",
+    "System.Reflection": "4.1.0-*",
+    "System.Reflection.TypeExtensions": "4.1.0-*",
+    "System.Runtime": "4.0.21-*",
+    "System.Xml.ReaderWriter": "4.0.11-*"
   },
   "frameworks": {
-    "dnx451": {
-      "frameworkAssemblies": {
-        "System.Runtime": "",
-        "System.Threading":"",
-        "System.Threading.Tasks":"",
-        "System.Collections":"",
-        "System.Globalization":"",
-        "System.Linq": "",
-        "System.Text.Encoding":"",
-        "System.IO":"",
-        "System.Reflection":"",
-        "System.Security":"",
-        "System.Xml":""
-      }
-    },
-    "dnxcore50": {
-      "dependencies": {
-        "System.Runtime": "4.0.21-beta-23409",
-        "System.Xml.ReaderWriter": "4.0.11-beta-23409"
-      }
-    }
+    "dotnet5.4": { }
   }
 }

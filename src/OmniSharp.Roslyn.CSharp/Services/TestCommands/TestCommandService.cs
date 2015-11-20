@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Composition;
-using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,9 +28,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
         public async Task<GetTestCommandResponse> Handle(TestCommandRequest request)
         {
             var quickFixes = new List<QuickFix>();
+            var response = new GetTestCommandResponse();
 
             var document = _workspace.GetDocument(request.FileName);
-            var response = new GetTestCommandResponse();
             if (document != null)
             {
                 var semanticModel = await document.GetSemanticModelAsync();
