@@ -22,7 +22,7 @@ call dnvm install 1.0.0-rc2-16386 -u -r coreclr
 call dnu restore
 if %errorlevel% neq 0 exit /b %errorlevel%
 
-call dnvm use 1.0.0-rc2-16386 -u -r coreclr
+call dnvm use 1.0.0-rc2-16386 -r coreclr
 
 pushd tests\OmniSharp.Bootstrap.Tests
 call dnx test
@@ -54,7 +54,7 @@ call dnx test
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
-call dnvm use 1.0.0-rc2-16386 -u -r clr
+call dnvm use 1.0.0-rc2-16386 -r clr
 
 pushd tests\OmniSharp.Bootstrap.Tests
 call dnx test
@@ -96,7 +96,7 @@ call dnx test
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
-call dnvm use -u -r coreclr
+call dnvm use 1.0.0-rc2-16386 -r coreclr
 
 rem call dnu pack src\OmniSharp.Host --configuration Release --out artifacts\build\nuget
 rem if %errorlevel% neq 0 exit /b %errorlevel%
