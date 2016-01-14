@@ -41,10 +41,13 @@ deploy:
   file:
     - 'omnisharp.tar.gz'
     - 'omnisharp.bootstrap.tar.gz'
+    - 'omnisharp-coreclr.tar.gz'
+    - 'omnisharp-coreclr.bootstrap.tar.gz'
   skip_cleanup: true
   on:
     repo: OmniSharp/omnisharp-roslyn
     tags: true
+    condition: "$TRAVIS_OS_NAME" != "osx"
 after_deploy: |
   OMNISHARP_VERSION="1.0.0-dev";
   if [ $TRAVIS_TAG ]; then
