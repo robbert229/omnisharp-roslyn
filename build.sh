@@ -172,23 +172,23 @@ grep "Build failed" buildlog
 rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-clr-win-x86 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp/approot/packages
-find artifacts/build/omnisharp/approot/packages/dnx-clr-win-x86.1.0.0-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp/approot/packages/dnx-clr-win-x86.1.0.0-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-coreclr-win-x64 -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp/approot/packages
-find artifacts/build/omnisharp/approot/packages/dnx-coreclr-win-x64.1.0.0-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp/approot/packages/dnx-coreclr-win-x64.1.0.0-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-mono -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp/approot/packages
-find artifacts/build/omnisharp/approot/packages/dnx-mono.1.0.0-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp/approot/packages/dnx-mono.1.0.0-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-coreclr-linux-x64 -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp/approot/packages
-find artifacts/build/omnisharp/approot/packages/dnx-coreclr-linux-x64.1.0.0-rc2-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp/approot/packages/dnx-coreclr-linux-x64.1.0.0-rc2-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-coreclr-darwin-x64 -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp/approot/packages
-find artifacts/build/omnisharp/approot/packages/dnx-coreclr-darwin-x64.1.0.0-rc2-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp/approot/packages/dnx-coreclr-darwin-x64.1.0.0-rc2-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 tree -if artifacts/build/omnisharp | grep .nupkg | xargs rm
@@ -206,23 +206,23 @@ grep "Build failed" buildlog
 rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-clr-win-x86 -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp.bootstrap/approot/packages
-find artifacts/build/omnisharp.bootstrap/approot/packages/dnx-clr-win-x86.1.0.0-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp.bootstrap/approot/packages/dnx-clr-win-x86.1.0.0-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-coreclr-win-x64 -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp.bootstrap/approot/packages
-find artifacts/build/omnisharp.bootstrap/approot/packages/dnx-coreclr-win-x64.1.0.0-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp.bootstrap/approot/packages/dnx-coreclr-win-x64.1.0.0-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-mono -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp.bootstrap/approot/packages
-find artifacts/build/omnisharp.bootstrap/approot/packages/dnx-mono.1.0.0-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp.bootstrap/approot/packages/dnx-mono.1.0.0-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-coreclr-linux-x64 -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp.bootstrap/approot/packages
-find artifacts/build/omnisharp.bootstrap/approot/packages/dnx-coreclr-linux-x64.1.0.0-rc2-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp.bootstrap/approot/packages/dnx-coreclr-linux-x64.1.0.0-rc2-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-coreclr-darwin-x64 -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp.bootstrap/approot/packages
-find artifacts/build/omnisharp.bootstrap/approot/packages/dnx-coreclr-darwin-x64.1.0.0-rc2-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp.bootstrap/approot/packages/dnx-coreclr-darwin-x64.1.0.0-rc2-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 tree -if artifacts/build/omnisharp.bootstrap | grep .nupkg | xargs rm
@@ -244,15 +244,15 @@ grep "Build failed" buildlog
 rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-coreclr-win-x64 -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp-coreclr/approot/packages
-find artifacts/build/omnisharp-coreclr/approot/packages/dnx-coreclr-win-x64.1.0.0-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp-coreclr/approot/packages/dnx-coreclr-win-x64.1.0.0-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-coreclr-linux-x64 -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp-coreclr/approot/packages
-find artifacts/build/omnisharp-coreclr/approot/packages/dnx-coreclr-linux-x64.1.0.0-rc2-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp-coreclr/approot/packages/dnx-coreclr-linux-x64.1.0.0-rc2-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-coreclr-darwin-x64 -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp-coreclr/approot/packages
-find artifacts/build/omnisharp-coreclr/approot/packages/dnx-coreclr-darwin-x64.1.0.0-rc2-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp-coreclr/approot/packages/dnx-coreclr-darwin-x64.1.0.0-rc2-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 tree -if artifacts/build/omnisharp-coreclr | grep .nupkg | xargs rm
@@ -270,15 +270,15 @@ grep "Build failed" buildlog
 rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-coreclr-win-x64 -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp-coreclr.bootstrap/approot/packages
-find artifacts/build/omnisharp-coreclr.bootstrap/approot/packages/dnx-coreclr-win-x64.1.0.0-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp-coreclr.bootstrap/approot/packages/dnx-coreclr-win-x64.1.0.0-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-coreclr-linux-x64 -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp-coreclr.bootstrap/approot/packages
-find artifacts/build/omnisharp-coreclr.bootstrap/approot/packages/dnx-coreclr-linux-x64.1.0.0-rc2-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp-coreclr.bootstrap/approot/packages/dnx-coreclr-linux-x64.1.0.0-rc2-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 mono nuget.exe install dnx-coreclr-darwin-x64 -Version 1.0.0-rc2-16386 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp-coreclr.bootstrap/approot/packages
-find artifacts/build/omnisharp-coreclr.bootstrap/approot/packages/dnx-coreclr-darwin-x64.1.0.0-rc2-16386 -type d -maxdepth 0
+find artifacts/build/omnisharp-coreclr.bootstrap/approot/packages/dnx-coreclr-darwin-x64.1.0.0-rc2-* -type d -maxdepth 0
 rc=$?; if [[ $rc != 0 ]]; then exit 1; fi
 
 tree -if artifacts/build/omnisharp-coreclr.bootstrap | grep .nupkg | xargs rm
