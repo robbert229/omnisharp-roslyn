@@ -47,7 +47,7 @@ deploy:
   on:
     repo: OmniSharp/omnisharp-roslyn
     tags: true
-    condition: "$TRAVIS_OS_NAME" != "osx"
+    condition: $TRAVIS_OS_NAME != osx
 after_deploy: |
   OMNISHARP_VERSION="1.0.0-dev";
   if [ $TRAVIS_TAG ]; then
