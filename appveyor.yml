@@ -5,7 +5,7 @@ test: off # this turns of AppVeyor automatic searching for test-assemblies, not 
 build_script:
   - build.cmd
 artifacts:
-- path: artifacts/.*\.zip
+- path: artifacts/*.zip
 deploy:
 - provider: GitHub
   tag: $(APPVEYOR_REPO_TAG_NAME)
