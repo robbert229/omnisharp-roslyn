@@ -30,6 +30,9 @@ addons:
       - curl
       - tree
 before_deploy:
+  - ls
+  - ls _builds
+  - ls _builds/*/artifacts/*.tar.gz
   - export FILE_TO_UPLOAD=$(ls artifacts/*.tar.gz)
 deploy:
   provider: releases
