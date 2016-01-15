@@ -41,17 +41,17 @@ namespace OmniSharp
             while (enumerator.MoveNext())
             {
                 var arg = (string)enumerator.Current;
-                if (arg == "-s")
+                if (arg == "-s" || arg == "--solution")
                 {
                     enumerator.MoveNext();
                     applicationRoot = Path.GetFullPath((string)enumerator.Current);
                 }
-                else if (arg == "-p")
+                else if (arg == "-p" || arg == "--port")
                 {
                     enumerator.MoveNext();
                     serverPort = int.Parse((string)enumerator.Current);
                 }
-                else if (arg == "-v")
+                else if (arg == "-v" || arg == "--verbose")
                 {
                     logLevel = LogLevel.Verbose;
                 }
